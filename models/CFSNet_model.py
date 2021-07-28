@@ -1,10 +1,11 @@
 import os
 from collections import OrderedDict
+
 import torch
-import torch.nn as nn
 from torch.optim import lr_scheduler
 from .modules.architecture import *
 from .modules.loss import GANLoss, GradientPenaltyLoss
+# from data.deblur import *
 
 class CFSNetModel():
     def __init__(self, opt):
@@ -17,7 +18,7 @@ class CFSNetModel():
         self.is_train = opt['is_train']
         if self.is_train:
             self.use_gan = opt['use_gan']
-            self.training_phase = train_opt['training_phase']
+            self.training_phase = train_opt['training_phase'] ##stage 1 or stage 2
         self.schedulers = []
         self.optimizers = []
 
@@ -122,17 +123,28 @@ class CFSNetModel():
 
     def feed_data(self, data, need_ground_truth=True):
         if self.opt['task_type'] == 'denoise':
-            self.gt_noise = torch.FloatTensor(data['GT'].size()).normal_(mean=0, std=self.opt['noise_level'] / 255.)
+            self.gt_noise = torch.FloatTensor(data['GT'].size()).normal_(mean=0, std=self.opt['noise_level'] / 255.)##add Gussian noise
             self.Input = data['GT'] + self.gt_noise
             self.Input = self.Input.to(self.device)
             self.gt_noise = self.gt_noise.to(self.device)
         else:
+            # self.gt_noise = \
+            # torch.FloatTensor(data['GT'].size()).normal_(mean=0, std=self.opt['noise_level'] / 255.)
+            # print(data['LR'].type())
+            # print(data['LR'].size())
+
+            # addBlur_and_addNoise(data['LR'], 10, 10)
+            # print("zhangyijie----------------")
             self.Input = data['LR'].to(self.device)  
 
         if need_ground_truth:
             self.ground_truth = data['GT'].to(self.device) 
 
     def optimize_parameters(self, step):
+        """
+
+        @param step:
+        """
         # optimize G
         if self.training_phase == "tuning_branch":
             for parm in self.netG.main.parameters():
@@ -149,7 +161,8 @@ class CFSNetModel():
             loss_total_g = 0
             if step % self.D_update_ratio == 0 and step >= self.D_init_iters:
                 # Train G
-                if self.loss_dis:  # distortion loss
+                if self.loss_dis:  # mes loss
+
                     loss_dis_g = self.loss_dis_w * self.loss_dis(self.Output, self.ground_truth)
                     loss_total_g = loss_dis_g
                 if self.loss_fea:  # perceptual loss
@@ -157,10 +170,16 @@ class CFSNetModel():
                     fake_fea = self.netF(self.Output)
                     loss_fea_g = self.loss_fea_w * self.loss_fea(fake_fea, real_fea)
                     loss_total_g += loss_fea_g
+                bce = nn.BCELoss()
                 # gan loss
+                # print("output:{}".format(self.Output.shape))
                 pred_g_fake = self.netD(self.Output)
+                # print("pred_g_fake:{}".format(pred_g_fake.shape))
+                # print(pred_g_fake)
+                # loss_gan_g = bce(pred_g_fake, torch.ones_like(pred_g_fake))
                 loss_gan_g = -1*self.loss_gan_w * self.loss_gan(pred_g_fake)  # wgan:-E_g(D(x)), to min wasserstein distance:L=E_r(D(x))-E_g(D(x))
                 loss_total_g += loss_gan_g
+                # print("loss_total_g:{}".format(loss_total_g))
 
                 loss_total_g.backward()
                 self.optimizer_G.step()
@@ -173,6 +192,14 @@ class CFSNetModel():
             pred_d_fake = self.netD(self.Output.detach())
             loss_gan_d_fake = self.loss_gan(pred_d_fake)  # wgan:E_g(D(x))
 
+            # #label smoothing
+            # real = torch.tensor(torch.rand(pred_d_real.size()) * 0.25 + 0.85)
+            # fake = torch.tensor(torch.rand(pred_d_fake.size()) * 0.15)
+            #
+            # loss_gan_d_real = bce(pred_d_real, real)
+            # loss_gan_d_fake = bce(pred_d_fake, fake)
+
+            # loss_total_d = loss_gan_d_real + loss_gan_d_fake
             loss_total_d = loss_gan_d_fake-loss_gan_d_real
 
             if self.opt['train']['loss_gan_type'] == 'wgan-gp':
@@ -192,8 +219,8 @@ class CFSNetModel():
             self.log_dict['loss_gan_d_fake'] = loss_gan_d_fake.item()
             self.log_dict['loss_total_d'] = loss_total_d.item()
 
-            if self.opt['train']['loss_gan_type'] == 'wgan-gp':
-                self.log_dict['loss_gp_d'] = loss_gp_d.item()
+            # if self.opt['train']['loss_gan_type'] == 'wgan-gp':
+            #     self.log_dict['loss_gp_d'] = loss_gp_d.item()
             # D outputs
             self.log_dict['D_real'] = torch.mean(pred_d_real.detach())
             self.log_dict['D_fake'] = torch.mean(pred_d_fake.detach())
@@ -278,4 +305,6 @@ class CFSNetModel():
     def load_network(self, load_path, network, strict=True):
         if isinstance(network, nn.DataParallel):
             network = network.module
+            for ind, i in network.state_dict().items():
+                print(ind, i.shape)
         network.load_state_dict(torch.load(load_path), strict=strict)

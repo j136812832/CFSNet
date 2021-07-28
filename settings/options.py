@@ -13,6 +13,7 @@ def parse(opt_path):
         for line in f:
             line = line.split('//')[0] + '\n'
             json_str += line
+    print(json_str)
     opt = json.loads(json_str, object_pairs_hook=OrderedDict)
     opt['timestamp'] = get_timestamp()
     scale = opt['scale']
@@ -32,6 +33,7 @@ def parse(opt_path):
             if dataset['dataroot_LR'].endswith('lmdb'):
                 is_lmdb = True
         dataset['data_type'] = 'lmdb' if is_lmdb else 'img'
+        print(dataset['data_type'])
 
         if phase == 'train' and 'subset_file' in dataset and dataset['subset_file'] is not None:
             dataset['subset_file'] = os.path.expanduser(dataset['subset_file'])

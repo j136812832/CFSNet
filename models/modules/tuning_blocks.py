@@ -51,8 +51,20 @@ class TuningBlockModule(nn.Module):
             ))
 
     def forward(self, x, alpha, number=0):
+        """
+
+        @param x:e
+        @param alpha:f
+        @param number:g
+        @return: g
+        """
         input_alpha = self.control_alpha(alpha)
         tuning_f = self.tuning_blocks[number](x)
         ad_alpha = self.adaptive_alpha[number](input_alpha)
         ad_alpha = ad_alpha.view(-1, self.num_channels, 1, 1)
         return tuning_f * ad_alpha, torch.ones_like(ad_alpha).cuda()-ad_alpha
+
+# a = TuningBlockModule()
+# b = torch.randn(1,64,128,128)
+# control_vector = torch.ones(b.shape[0], 512)
+# a(b, control_vector)

@@ -7,6 +7,9 @@ from torch.nn import init
 from . import main_net
 from . import tuning_blocks
 from . import block as B
+# import main_net
+# import tuning_blocks
+# import block as B
 
 class CFSNet(nn.Module):
     def __init__(self, in_channel, out_channel, num_channels, num_main_blocks, num_tuning_blocks, upscale=4,task_type='sr'):
@@ -18,19 +21,29 @@ class CFSNet(nn.Module):
         self.tuning_blocks = tuning_blocks.TuningBlockModule(channels=num_channels, num_blocks=num_tuning_blocks,task_type=task_type, upscale=upscale)
 
     def forward(self, x,  control_vector):
-        out = self.main.head(x)
+        out = self.main.head(x)##1, 3, 128, 128 -> 1, 64, 128, 128
         head_f=out
+        # print(head_f.shape)
         for i, body in enumerate(self.main.body):
-            tun_out, tun_alpha = self.tuning_blocks(x=out, alpha= control_vector.cuda(),number=i)
+            tun_out, tun_alpha = self.tuning_blocks(x=out, alpha= control_vector.cuda(), number=i)
             out = body(out) * tun_alpha + tun_out
 
         if self.task_type == 'sr':
-            tun_out,tun_alpha = self.tuning_blocks(x=out+head_f, alpha= control_vector.cuda(), number=-1)
+            # print(99999)
+            tun_out, tun_alpha = self.tuning_blocks(x=out+head_f, alpha= control_vector.cuda(), number=-1)
             out = self.main.tail(out+head_f)
             out = self.main.end(out*tun_alpha + tun_out)
+            # print(out.shape)
         else:
             out = self.main.end(out+head_f)
+            # print(out.shape)
         return out
+# a = CFSNet(3, 3, 64, 30, 30, 4)
+# b = torch.randn(1,3,128,128)
+# control_vector = torch.ones(b.shape[0], 512)
+# print(control_vector.shape)
+# a(b, control_vector)
+
 
 ####################
 # Discriminator
@@ -64,7 +77,8 @@ class Discriminator_VGG_128(nn.Module):
         self.conv4_1 = nn.Conv2d(nf * 8, nf * 8, 4, 2, 1, bias=False)
         self.bn4_1 = nn.BatchNorm2d(nf * 8, affine=True)
 
-        self.linear1 = nn.Linear(512 * 4 * 4, 100)
+        self.linear1 = nn.Linear(524288, 100)
+
         self.linear2 = nn.Linear(100, 1)
 
         # activation function
@@ -87,6 +101,7 @@ class Discriminator_VGG_128(nn.Module):
         fea = self.lrelu(self.bn4_1(self.conv4_1(fea)))
 
         fea = fea.view(fea.size(0), -1)
+        # print("fea.shape{}".format(fea.shape))
         fea = self.lrelu(self.linear1(fea))
         out = self.linear2(fea)
         return out
