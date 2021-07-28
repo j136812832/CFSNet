@@ -111,6 +111,8 @@ class LRGTDataset(data.Dataset):
 
         if LR_path is None:
             LR_path = GT_path
+
+
         return {'LR': img_LR, 'GT': img_GT, 'LR_path': LR_path, 'GT_path': GT_path}
 
     def __len__(self):

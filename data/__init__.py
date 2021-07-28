@@ -12,7 +12,7 @@ def create_dataloader(dataset, dataset_opt):
         shuffle = False
         num_workers = 1
     return torch.utils.data.DataLoader(
-        dataset, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, pin_memory=True)
+        dataset, batch_size=batch_size, shuffle=shuffle, num_workers=0, pin_memory=False)
 
 
 def create_dataset(dataset_opt):
