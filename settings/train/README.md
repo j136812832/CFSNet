@@ -4,7 +4,7 @@ For different tasks, you should choose different .json file to initialize the co
 + Step 1 (train the main branch):
 ```c++
 "name": "sr/step1"                         // name to save training results
-, "scale": 4                               // upscale for SR 
+, "scale": 4                               // upscale for SR** 
  , "input_alpha":0                         // set the control variable α_in as 0
 , "use_gan": false                         // we use mae loss in Step 1
 , "saved_model": null                      // path of the trained model

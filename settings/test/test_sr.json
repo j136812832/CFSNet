@@ -1,46 +1,46 @@
 {
-  "name": "sr_bd/0_15" //name to save results
+  "name": "sr_renxiang/0_45" //name to save results
   , "model":"CFSNet"
   , "task_type": "sr" //sr, deblock, denoise
   , "scale": 3 //upscale for SR (x4 for SR and x3 for SR+Deblur in our paper)
-  , "input_alpha":0.15 //control the variable alpha_in to get different image restoration results
-  , "gpu_ids": [3]
+  , "input_alpha":0.45 //control the variable alpha_in to get different image restoration results
+  , "gpu_ids": [0]
   , "is_train": false
   , "use_gan": false
   , "use_tensorboard_logger": false
 
   , "path": {
-    "root": "/media/data1/CFSNet/test/" // path to save results
-    , "saved_model": "../models/latest_G.pth" // path of the trained model
+    "root": "./test/" // path to save results
+    , "saved_model": "./models/sr_BD.pth" // path of the trained model
     , "log": null //initialized in options.py
     , "results_root": null //initialized in options.py
   }
 
   , "datasets": {
-//    "test_1": { 
-//      "name": "PIRMTest" 
+//    "test_1": {
+//      "name": "PIRMTest"
 //      , "mode": "sr" // the type of datasets
-//      , "dataroot_GT": "../test/PIRMTest/Original"
-//      , "dataroot_LR": "../test/PIRMTest/4x_downsampled"
+//      , "dataroot_GT": "./PIRMTest/4x_hr"
+//      , "dataroot_LR": "./PIRMTest/4x_downsampled"
 //    }
-      "test_2": { 
-      "name": "set5"
-      , "mode": "sr" 
-      , "dataroot_GT": "../test/HR/set5/x3"
-      , "dataroot_LR": "../test/LR/LR_sigma16_BD/set5/x3"
-    }
-    , "test_3": { 
-      "name": "bsd100"
+//      "test_2": {
+//      "name": "set5"
+//      , "mode": "sr"
+//      , "dataroot_GT": "../test/HR/set5/x3"
+//      , "dataroot_LR": "../test/LR/LR_sigma16_BD/set5/x3"
+//    },
+    "test_3": {
+      "name": "pp"
       , "mode": "sr"
-      , "dataroot_GT": "../test/HR/bsd100/x3"
-      , "dataroot_LR": "../test/LR/LR_sigma16_BD/bsd100/x3"
+      , "dataroot_GT": "./renxiang_label"
+      , "dataroot_LR": "./renxiang_test"
     }
-  , "test_4": { 
-      "name": "urban100"
-      , "mode": "sr"
-      , "dataroot_GT": "../test/HR/Urban100/x3"
-      , "dataroot_LR": "../test/LR/LR_sigma16_BD/Urban100/x3"
-    }
+//  , "test_4": {
+//      "name": "urban100"
+//      , "mode": "sr"
+//      , "dataroot_GT": "../test/HR/Urban100/x3"
+//      , "dataroot_LR": "../test/LR/LR_sigma16_BD/Urban100/x3"
+//    }
   }
 
   , "network_G": {

@@ -1,6 +1,7 @@
 import os.path
 import torch.utils.data as data
 from .util import *
+from .deblur import *
 
 class LRGTDataset(data.Dataset):
 
@@ -32,26 +33,40 @@ class LRGTDataset(data.Dataset):
         self.random_scale_list = [1]
 
     def __getitem__(self, index):
+
         GT_path, LR_path = None, None
         scale = self.opt['scale']
         GT_size = self.opt['GT_size']
 
         # get GT image
         GT_path = self.paths_GT[index]
+        # print(self.GT_env)
         img_GT =  read_img(self.GT_env, GT_path)
+        # print(" load img_GT {}".format(img_GT.shape))
+        # print(" load GT_path {}".format(GT_path))
+        # print(" load GT_size {}".format(GT_size))
 
         # modcrop in the validation / test phase
         if self.opt['phase'] != 'train':
-            img_GT =  modcrop(img_GT, scale)
+            print("start val=====>")
+            LR_path = self.paths_LR[index]
+            img_LR = read_img(self.LR_env, LR_path)
+            img_LR = cv2.resize(img_LR, (1024, 1024), interpolation=cv2.INTER_LINEAR)
+            img_GT = cv2.resize(img_GT, (1024, 1024), interpolation=cv2.INTER_LINEAR)
+
+
 
         # change color space if necessary
         if self.opt['color']:
             img_GT =  channel_convert(img_GT.shape[2], self.opt['color'], [img_GT])[0]
 
         # get LR image
-        if self.paths_LR:
+        if self.paths_LR and self.opt['phase'] == 'train':
             LR_path = self.paths_LR[index]
             img_LR =  read_img(self.LR_env, LR_path)
+            img_LR = cv2.resize(img_LR, (GT_size, GT_size), interpolation=cv2.INTER_LINEAR)
+            # print(" load img_LR {}".format(img_LR.shape))
+            img_GT = cv2.resize(img_GT, (GT_size, GT_size), interpolation=cv2.INTER_LINEAR)
         else:  
             # randomly scale during training
             if self.opt['phase'] == 'train':
@@ -76,24 +91,32 @@ class LRGTDataset(data.Dataset):
             if img_LR.ndim == 2: img_LR = np.expand_dims(img_LR, axis=2)
 
         if self.opt['phase'] == 'train':
-            # if the image size is too small
-            H, W, _ = img_GT.shape
-            if H < GT_size or W < GT_size:
-                img_GT = cv2.resize(np.copy(img_GT), (GT_size, GT_size), interpolation=cv2.INTER_LINEAR)
-                if img_GT.ndim == 2: img_GT = np.expand_dims(img_GT, axis=2)
-                # using matlab imresize
-                img_LR =  imresize_np(img_GT, 1 / scale, True)
-                if img_LR.ndim == 2: img_LR = np.expand_dims(img_LR, axis=2)
+            # # if the image size is too small
+            # H, W, _ = img_GT.shape
+            # if H < GT_size or W < GT_size:
+            #     img_GT = cv2.resize(np.copy(img_GT), (GT_size, GT_size), interpolation=cv2.INTER_LINEAR)
+            #     if img_GT.ndim == 2: img_GT = np.expand_dims(img_GT, axis=2)
+            #     # using matlab imresize
+            #     img_LR =  imresize_np(img_GT, 1 / scale, True)
+            #     if img_LR.ndim == 2: img_LR = np.expand_dims(img_LR, axis=2)
+            #
+            # H, W, C = img_LR.shape
+            # LR_size = GT_size // scale
+            #
+            # # randomly crop
+            # rnd_h = random.randint(0, max(0, H - LR_size))
+            # rnd_w = random.randint(0, max(0, W - LR_size))
+            # img_LR = img_LR[rnd_h:rnd_h + LR_size, rnd_w:rnd_w + LR_size, :]
+            # # print(" after crop {}".format(img_LR.shape))
+            # rnd_h_GT, rnd_w_GT = int(rnd_h * scale), int(rnd_w * scale)
+            # img_GT = img_GT[rnd_h_GT:rnd_h_GT + GT_size, rnd_w_GT:rnd_w_GT + GT_size, :]
+            # # print(" after crop {}".format(img_GT.shape))
+            #
+            # img_GT = cv2.resize(img_GT, (GT_size, GT_size), interpolation=cv2.INTER_LINEAR)
+            # img_LR = cv2.resize(img_LR, (LR_size, LR_size), interpolation=cv2.INTER_LINEAR)
 
-            H, W, C = img_LR.shape
-            LR_size = GT_size // scale
-
-            # randomly crop
-            rnd_h = random.randint(0, max(0, H - LR_size))
-            rnd_w = random.randint(0, max(0, W - LR_size))
-            img_LR = img_LR[rnd_h:rnd_h + LR_size, rnd_w:rnd_w + LR_size, :]
-            rnd_h_GT, rnd_w_GT = int(rnd_h * scale), int(rnd_w * scale)
-            img_GT = img_GT[rnd_h_GT:rnd_h_GT + GT_size, rnd_w_GT:rnd_w_GT + GT_size, :]
+            # print(" after crop {}".format(img_LR.shape))
+            # print(" after crop {}".format(img_GT.shape))
 
             # augmentation - flip, rotate
             img_LR, img_GT =  augment([img_LR, img_GT], self.opt['use_flip'], self.opt['use_rot'])
@@ -111,6 +134,27 @@ class LRGTDataset(data.Dataset):
 
         if LR_path is None:
             LR_path = GT_path
+        # print("xxxxxxxxxxxxxxxxxxxx")
+        # print(img_LR.shape)
+        # print(img_GT.shape)
+        # print(LR_path)
+        # print(GT_path)
+        # print("xxxxxxxxxxxxxxxxxxxx")
+        # print(6666666666666666)
+
+        # addBlur_and_addNoise()
+
+        # if self.opt['phase'] == 'train':
+        #     img_LR = img_LR.unsqueeze(0)
+        #     img_LR = addBlur_and_addNoise(img_LR, 10, 10)
+        #     img_LR = img_LR.squeeze(0)
+
+        # print(img_LR.size())
+        # # print(img_LR.type())
+        # print("----------------")
+        # print(img_LR.shape)
+        # print(img_GT.shape)
+
         return {'LR': img_LR, 'GT': img_GT, 'LR_path': LR_path, 'GT_path': GT_path}
 
     def __len__(self):

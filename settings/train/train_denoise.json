@@ -1,18 +1,19 @@
 {
-  "name": "denoise_color/sigma50_step2" // name to save training results
+  "name": "denoise_color/sigma50_step1_1" // name to save training results
   , "model":"CFSNet"
   , "task_type": "denoise" // sr, deblock, denoise
-  , "input_alpha":1 // control the variable alpha_in to get different image restoration results
-  , "noise_level": 50 //the noise level of the input images
-  , "gpu_ids": [3]
+  , "input_alpha":0 // control the variable alpha_in to get different image restoration results
+  , "noise_level": 25 //the noise level of the input images
+  , "gpu_ids": [0]
   , "is_train": true
   , "use_gan": false
   , "use_tensorboard_logger": true // you can use tensorboard to observe the loss curve
-
-  , "path": {
-    "root":  "/media/data1/CFSNet/train/" // path to save training results
-    , "saved_model": "../models/48000_G.pth" // path of the trained model
-    , "VGG_model_path": "/media/data1/ww/model/vgg19-dcbb9e9d.pth" // path of the pretrained VGG model used to get perceptual loss
+  , "scale": false
+  ,
+  "path": {
+    "root":  "./CFSNet/train/" // path to save training results
+    , "saved_model": null // path of the trained model
+    , "VGG_model_path": "./vgg19-dcbb9e9d.pth" // path of the pretrained VGG model used to get perceptual loss
     , "log": null //initialized in options.py
     , "models": null //initialized in options.py
     , "experiments_root": null //initialized in options.py
@@ -22,9 +23,9 @@
     "train": {
       "name": "BSD500"
       , "mode": "denoise" // the type of datasets
-      , "dataroot_GT": "../data/BSD500/train"
-      , "batch_size": 128
-      , "patch_size": 40 // the size of input images
+      , "dataroot_GT": "./bsd50"
+      , "batch_size": 5
+      , "patch_size": 64 // the size of input images
       , "color": "RGB" //gray, RGB
 
       , "use_scale": true //data augmentation
@@ -41,7 +42,7 @@
     , "val": {
       "name": "val_set5_part"
       , "mode": "denoise"
-      , "dataroot_GT": "/media/data1/ww/sr_data/test/Set5"
+      , "dataroot_GT": "./bsd50"
       , "color": "RGB" //gray, RGB
     }
   }
@@ -55,14 +56,14 @@
   }
 
   , "train": {
-    "training_phase": "tuning_branch" //two training stages: Step1: main_branch; Step2: tuning_branch
-    , "lr_G": 1e-4 // learning rate
+    "training_phase": "main_branch" //two training stages: Step1: main_branch; Step2: tuning_branch
+    , "lr_G": 0.01 // learning rate
     , "weight_decay_G": null
     , "lr_scheme": "MultiStepLR" // learning rate decay scheme
     , "niter": 50000 //total iterations = epoch*train_size = epoch*(dataset_size/batch_size)
     , "lr_steps": [300000, 400000, 500000]
-    , "lr_gamma": 0.5 // learning rate decreases by a factor of 0.8
-    , "val_freq": 500 // evaluate the model every 5000 steps
+    , "lr_gamma": 0.25 // learning rate decreases by a factor of 0.8
+    , "val_freq": 250 // evaluate the model every 5000 steps
     , "beta1_G": 0.9
 	
     , "lr_D": 1e-4

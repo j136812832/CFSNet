@@ -13,7 +13,7 @@ from settings import options as option
 from utils import util
 from data.util import bgr2ycbcr
 from utils.logger import Logger, PrintLogger
-from data import create_dataloader,create_dataset
+from data import create_dataloader, create_dataset
 from models import create_model
 
 
@@ -103,20 +103,25 @@ def main():
                 for val_data in val_loader:
                     idx += 1
                     img_name = os.path.splitext(os.path.basename(val_data['GT_path'][0]))[0]
+                    # print(img_name)
                     img_dir = os.path.join(opt['path']['val_images'], img_name)
                     util.mkdir(img_dir)
-
+                    # print(val_data)
                     model.feed_data(val_data)
                     model.test()
 
                     visuals = model.get_current_visuals()
                     out_img = util.tensor2img(visuals['Output'])
+                    # print(out_img.shape)
+                    # print(out_img)
                     gt_img = util.tensor2img(visuals['ground_truth'])  # uint8
 
                     # Save output images for reference
                     save_img_path = os.path.join(img_dir, '{:s}_{:d}.png'.format(\
                         img_name, current_step))
+                    print("save_img_path:{}".format(save_img_path))
                     util.save_img(out_img, save_img_path)
+                    # print(out)
 
                     # calculate PSNR
                     if len(gt_img.shape) == 2:
@@ -129,7 +134,7 @@ def main():
                         cropped_out_img_y = bgr2ycbcr(cropped_out_img, only_y=True)
                         cropped_gt_img_y = bgr2ycbcr(cropped_gt_img, only_y=True)
                         avg_psnr += util.psnr(cropped_out_img_y, cropped_gt_img_y)
-                        avg_ssim += util.ssim(cropped_out_img_y, cropped_gt_img_y, multichannel=False)
+                        avg_ssim += util.ssim(cropped_out_img_y, cropped_gt_img_y, multichannel=True)
                     else:
                         avg_psnr += util.psnr(cropped_out_img, cropped_gt_img)
                         avg_ssim += util.ssim(cropped_out_img, cropped_gt_img, multichannel=True)
