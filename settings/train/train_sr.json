@@ -4,15 +4,15 @@
   , "task_type": "sr" // sr, deblock, denoise
   , "scale": 4 // upscale for SR (x4 for SR and x3 for SR+Deblur in our paper)
   , "input_alpha":1 // control the variable alpha_in to get different image restoration results
-  , "gpu_ids": [6]
+  , "gpu_ids": [0]
   , "is_train": true
-  , "use_gan": true
+  , "use_gan": false
   , "use_tensorboard_logger": true // you can use tensorboard to observe the loss curve
 
   , "path": {
-    "root":  "/media/data1/CFSNet/train/" // path to save training results
+    "root":  "./CFSNet/train/" // path to save training results
     , "saved_model": null // path of the trained model
-    , "VGG_model_path": "../vgg19-dcbb9e9d.pth" // path of the pretrained VGG model used to get perceptual loss
+    , "VGG_model_path": "./vgg19-dcbb9e9d.pth" // path of the pretrained VGG model used to get perceptual loss
     , "log": null //initialized in options.py
     , "models": null //initialized in options.py
     , "experiments_root": null //initialized in options.py
@@ -22,9 +22,9 @@
     "train": {
       "name": "DIV2K"
       , "mode": "sr" // the type of datasets
-      , "dataroot_GT": "../data/DIV2K/DIV2K800_sub.lmdb" //we use lmdb file to speed up training
-      , "dataroot_LR": "../data/DIV2K/DIV2K800_sub_bicLRx4.lmdb"
-      , "batch_size": 16 
+      , "dataroot_GT": "./PIRMTest/4x_hr" //we use lmdb file to speed up training
+      , "dataroot_LR": "./PIRMTest/4x_lr"
+      , "batch_size": 4
       , "GT_size": 128 // the size of the ground truth images
       
       , "use_flip": true //data augmentation
@@ -40,8 +40,8 @@
     , "val": {
       "name": "val_set5_part"
       , "mode": "sr"
-      , "dataroot_GT": "../data/Set5"
-      , "dataroot_LR": "../data/Set5_bicLRx4"
+      , "dataroot_GT": "./PIRMTest/4x_hr"
+      , "dataroot_LR": "./PIRMTest/4x_lr"
     }
   }
 
@@ -66,7 +66,7 @@
     , "niter": 600000 //total iterations = epoch*train_size = epoch*(dataset_size/batch_size)
     , "lr_steps": [300000, 400000, 450000, 500000, 550000, 600000]
     , "lr_gamma": 0.8 // learning rate decreases by a factor of 0.8
-    , "val_freq": 5000 // evaluate the model every 5000 steps
+    , "val_freq": 50 // evaluate the model every 5000 steps
     , "beta1_G": 0.9
 	
     , "lr_D": 1e-4
@@ -89,7 +89,7 @@
   }
 
   , "logger": {
-    "print_freq": 1000 // print the training process every 1000 steps
+    "print_freq": 10 // print the training process every 1000 steps
     , "save_checkpoint_freq": 10000 //save the model every 10000 steps
   }
 }

@@ -129,7 +129,7 @@ def main():
                         cropped_out_img_y = bgr2ycbcr(cropped_out_img, only_y=True)
                         cropped_gt_img_y = bgr2ycbcr(cropped_gt_img, only_y=True)
                         avg_psnr += util.psnr(cropped_out_img_y, cropped_gt_img_y)
-                        avg_ssim += util.ssim(cropped_out_img_y, cropped_gt_img_y, multichannel=False)
+                        avg_ssim += util.ssim(cropped_out_img_y, cropped_gt_img_y, multichannel=True)
                     else:
                         avg_psnr += util.psnr(cropped_out_img, cropped_gt_img)
                         avg_ssim += util.ssim(cropped_out_img, cropped_gt_img, multichannel=True)

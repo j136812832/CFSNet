@@ -4,12 +4,12 @@ import time
 import argparse
 from collections import OrderedDict
 import numpy as np
-from codes.settings import options as option
-from codes.utils import util
-from codes.utils.logger import Logger, PrintLogger
-from codes.data import create_dataloader,create_dataset
-from codes.models import create_model
-from codes.data.util import bgr2ycbcr
+from settings import options as option
+from utils import util
+from utils.logger import Logger, PrintLogger
+from data import create_dataloader,create_dataset
+from models import create_model
+from data.util import bgr2ycbcr
 
 # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -35,8 +35,11 @@ for phase, dataset_opt in sorted(opt['datasets'].items()):
 
 # Create model
 model = create_model(opt)
-
+print("uuuuuuuuuuuuuu")
+print(test_loaders)
+print("ddddddddddddd")
 for test_loader in test_loaders:
+    print("vvvvvvvvvvvvvvvvvvvvv")
     test_set_name = test_loader.dataset.opt['name']
     print('\nTesting [{:s}]...'.format(test_set_name))
     test_start_time = time.time()
@@ -70,36 +73,39 @@ for test_loader in test_loaders:
             crop_border = test_loader.dataset.opt['scale']
             cropped_out_img = out_img[crop_border:-crop_border, crop_border:-crop_border, :]
             cropped_gt_img = gt_img[crop_border:-crop_border, crop_border:-crop_border, :]
-            psnr = util.psnr(cropped_out_img, cropped_gt_img)
-            ssim = util.ssim(cropped_out_img, cropped_gt_img, multichannel=True)
-            test_results['psnr'].append(psnr)
-            test_results['ssim'].append(ssim)
+            # psnr = util.psnr(cropped_out_img, cropped_gt_img)
+            # ssim = util.ssim(cropped_out_img, cropped_gt_img, multichannel=True)
+            # test_results['psnr'].append(psnr)
+            # test_results['ssim'].append(ssim)
             if gt_img.shape[2] == 3:  # RGB image
                 cropped_out_img_y = bgr2ycbcr(cropped_out_img, only_y=True)
                 cropped_gt_img_y = bgr2ycbcr(cropped_gt_img, only_y=True)
-                psnr_y = util.psnr(cropped_out_img_y, cropped_gt_img_y)
-                ssim_y = util.ssim(cropped_out_img_y, cropped_gt_img_y, multichannel=False)
-                test_results['psnr_y'].append(psnr_y)
-                test_results['ssim_y'].append(ssim_y)
-                print('{:20s} - PSNR: {:.4f} dB; SSIM: {:.4f}; PSNR_Y: {:.4f} dB; SSIM_Y: {:.4f}.'\
-                    .format(img_name, psnr, ssim, psnr_y, ssim_y))
+                # psnr_y = util.psnr(cropped_out_img_y, cropped_gt_img_y)
+                # ssim_y = util.ssim(cropped_out_img_y, cropped_gt_img_y, multichannel=True)
+                # test_results['psnr_y'].append(psnr_y)
+                # test_results['ssim_y'].append(ssim_y)
+                # print('{:20s} - PSNR: {:.4f} dB; SSIM: {:.4f}; PSNR_Y: {:.4f} dB; SSIM_Y: {:.4f}.'\
+                #     .format(img_name, psnr, ssim, psnr_y, ssim_y))
             else:
-                print('{:20s} - PSNR: {:.4f} dB; SSIM: {:.4f}.'.format(img_name, psnr, ssim))
+                print(1)
+                # print('{:20s} - PSNR: {:.4f} dB; SSIM: {:.4f}.'.format(img_name, psnr, ssim))
         else:
             print(img_name)
 
         save_img_path = os.path.join(dataset_dir, img_name + '.png')
+        print(save_img_path)
         util.save_img(out_img, save_img_path)
 
     if need_ground_truth:
         # Average PSNR/SSIM results
-        ave_psnr = sum(test_results['psnr']) / len(test_results['psnr'])
-        ave_ssim = sum(test_results['ssim']) / len(test_results['ssim'])
-        path_file = opt['path']['results_root']+ "/" + test_set_name + ".txt"
-        print('----Average PSNR/SSIM results for {}----\n\tPSNR: {:.4f} dB; SSIM: {:.4f}\n'\
-                .format(test_set_name, ave_psnr, ave_ssim))
-        if test_results['psnr_y'] and test_results['ssim_y']:
-            ave_psnr_y = sum(test_results['psnr_y']) / len(test_results['psnr_y'])
-            ave_ssim_y = sum(test_results['ssim_y']) / len(test_results['ssim_y'])
-            print('----Y channel, average PSNR/SSIM----\n\tPSNR_Y: {:.4f} dB; SSIM_Y: {:.4f}\n'\
-                .format(ave_psnr_y, ave_ssim_y))
+        print(666)
+        # ave_psnr = sum(test_results['psnr']) / len(test_results['psnr'])
+        # ave_ssim = sum(test_results['ssim']) / len(test_results['ssim'])
+        # path_file = opt['path']['results_root']+ "/" + test_set_name + ".txt"
+        # print('----Average PSNR/SSIM results for {}----\n\tPSNR: {:.4f} dB; SSIM: {:.4f}\n'\
+        #         .format(test_set_name, ave_psnr, ave_ssim))
+        # if test_results['psnr_y'] and test_results['ssim_y']:
+        #     ave_psnr_y = sum(test_results['psnr_y']) / len(test_results['psnr_y'])
+        #     ave_ssim_y = sum(test_results['ssim_y']) / len(test_results['ssim_y'])
+        #     print('----Y channel, average PSNR/SSIM----\n\tPSNR_Y: {:.4f} dB; SSIM_Y: {:.4f}\n'\
+        #         .format(ave_psnr_y, ave_ssim_y))

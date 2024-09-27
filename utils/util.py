@@ -79,6 +79,6 @@ def psnr(img1, img2):
     return 20 * math.log10(255.0 / math.sqrt(mse))
 
 
-def ssim(img1, img2, multichannel=False):
+def ssim(img1, img2, multichannel=True):
     assert img1.dtype == img2.dtype == np.uint8, 'np.uint8 is supposed.'
-    return compare_ssim(img1, img2, multichannel=multichannel)
+    return compare_ssim(img1, img2, multichannel=True)
